@@ -108,7 +108,6 @@
         }
         @media (min-width: 800px) { .hp-zone { font-size: 30px; } }
 
-        /* Break Token Stages */
         .token-stage-1 {
             background: #d97706 !important;
             border: 3px solid #fbbf24 !important;
@@ -124,7 +123,6 @@
         }
         @media (min-width: 800px) { .token-stage-2 { font-size: 50px; } }
 
-        /* Base Status Circle */
         .status-badge {
             border-radius: 50% !important;
             box-shadow: 0 4px 8px rgba(0,0,0,0.7);
@@ -132,7 +130,6 @@
         }
         @media (min-width: 800px) { .status-badge { font-size: 26px; } }
 
-        /* Icon Colors */
         .status-fire { background: rgba(220, 38, 38, 0.95) !important; border: 2px solid #f87171 !important; }
         .status-ice { background: rgba(6, 182, 212, 0.95) !important; border: 2px solid #67e8f9 !important; }
         .status-thunder { background: rgba(234, 179, 8, 0.95) !important; border: 2px solid #fde047 !important; color: #000 !important; text-shadow: none !important; }
@@ -145,31 +142,11 @@
         .status-poison { background: rgba(219, 39, 119, 0.95) !important; border: 2px solid #fbcfe8 !important; }
         .status-stun { background: rgba(250, 204, 21, 0.95) !important; border: 2px solid #fef08a !important; color: #000 !important; text-shadow: none !important; }
 
-        /* Mobile-Only Landscape Mode (Restricted to max-height 600px so Desktop Monitors stay normal) */
         @media (orientation: landscape) and (max-height: 600px) {
-            body {
-                padding: 0;
-                margin: 0;
-                overflow: hidden;
-                height: 100vh;
-                justify-content: center;
-            }
-
+            body { padding: 0; margin: 0; overflow: hidden; height: 100vh; justify-content: center; }
             .panel { display: none !important; }
-
-            #card-container {
-                height: 100vh;
-                width: auto;
-                max-width: none;
-                display: inline-block;
-            }
-
-            #card-image {
-                height: 100vh;
-                width: auto;
-                max-width: none;
-            }
-
+            #card-container { height: 100vh; width: auto; max-width: none; display: inline-block; }
+            #card-image { height: 100vh; width: auto; max-width: none; }
             .zone { font-size: 4vh; }
             .hp-zone { font-size: 3.5vh; }
             .token-stage-2 { font-size: 7vh; }
@@ -190,11 +167,12 @@
     </div>
 
     <div id="edit-panel" class="panel">
-        <div class="instruction" id="edit-instruction">Select a tool to modify the card layout.</div>
+        <div class="instruction" id="edit-instruction">Click anywhere to see live coordinates!</div>
         <input type="number" id="edit-max-hp" placeholder="Max HP" onchange="saveMaxHp()">
         <button id="btn-tool-hp" onclick="setPendingAction('hp')">1. Place HP Box</button>
         <button id="btn-tool-token" onclick="setPendingAction('token')">2. Add 'X' Break Box</button>
         <button id="btn-tool-status" onclick="setPendingAction('status')">3. Add Status Counter</button>
+        <button style="background-color: #8e44ad;" onclick="exportCoordinates()">Export JS Array</button>
         <button class="btn-danger" onclick="clearZones()">Clear Boxes</button>
     </div>
 
@@ -208,21 +186,17 @@
         const REPO_NAME = "mh-companion";
         const CARDS_DIR = "Cards";
 
-        // Pre-mapped default locations for all 10 Elemental & Status icons
         const defaultStatusZones = [
-            // Elements (Left Panel)
-            { id: 'fire', color: 'fire', x: 4.0, y: 73.0, w: 5.5, h: 7.5 },
-            { id: 'ice', color: 'ice', x: 11.0, y: 73.0, w: 5.5, h: 7.5 },
-            { id: 'thunder', color: 'thunder', x: 8.8, y: 80.5, w: 5.5, h: 7.5 },
-            { id: 'water', color: 'water', x: 5.5, y: 87.2, w: 5.5, h: 7.5 },
-            { id: 'dragon', color: 'dragon', x: 12.0, y: 87.2, w: 5.5, h: 7.5 },
-            
-            // Statuses (Right Panel)
-            { id: 'para', color: 'para', x: 22.0, y: 74.0, w: 5.5, h: 7.5 },
-            { id: 'blast', color: 'blast', x: 28.5, y: 74.0, w: 5.5, h: 7.5 },
-            { id: 'sleep', color: 'sleep', x: 25.3, y: 80.5, w: 5.5, h: 7.5 },
-            { id: 'poison', color: 'poison', x: 22.0, y: 87.2, w: 5.5, h: 7.5 },
-            { id: 'stun', color: 'stun', x: 28.5, y: 87.2, w: 5.5, h: 7.5 }
+            { id: 'fire', color: 'fire', x: 4.0, y: 71.0, w: 5.5, h: 7.5 },
+            { id: 'ice', color: 'ice', x: 10.5, y: 71.0, w: 5.5, h: 7.5 },
+            { id: 'thunder', color: 'thunder', x: 7.2, y: 77.5, w: 5.5, h: 7.5 },
+            { id: 'water', color: 'water', x: 4.0, y: 84.0, w: 5.5, h: 7.5 },
+            { id: 'dragon', color: 'dragon', x: 10.5, y: 84.0, w: 5.5, h: 7.5 },
+            { id: 'para', color: 'para', x: 20.5, y: 71.0, w: 5.5, h: 7.5 },
+            { id: 'blast', color: 'blast', x: 27.0, y: 71.0, w: 5.5, h: 7.5 },
+            { id: 'sleep', color: 'sleep', x: 23.8, y: 77.5, w: 5.5, h: 7.5 },
+            { id: 'poison', color: 'poison', x: 20.5, y: 84.0, w: 5.5, h: 7.5 },
+            { id: 'stun', color: 'stun', x: 27.0, y: 84.0, w: 5.5, h: 7.5 }
         ];
 
         let database = JSON.parse(localStorage.getItem('mh_hosted_database')) || {};
@@ -233,13 +207,23 @@
         let isEditMode = false;
         let pendingAction = null;
 
+        // --- SESSION STORAGE CACHING (PREVENTS RATE LIMITING) ---
+        async function fetchGitHubCached(url) {
+            const cached = sessionStorage.getItem(url);
+            if (cached) return JSON.parse(cached);
+            
+            const res = await fetch(url);
+            const data = await res.json();
+            if (res.ok) sessionStorage.setItem(url, JSON.stringify(data));
+            return data;
+        }
+
         async function initApp() {
             const mSelect = document.getElementById('monster-select');
             mSelect.innerHTML = '<option value="">Loading monsters...</option>';
 
             try {
-                const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${CARDS_DIR}`);
-                const data = await res.json();
+                const data = await fetchGitHubCached(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${CARDS_DIR}`);
 
                 if (Array.isArray(data)) {
                     mSelect.innerHTML = '';
@@ -269,8 +253,7 @@
             cSelect.innerHTML = '<option value="">Loading images...</option>';
 
             try {
-                const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${CARDS_DIR}/${encodeURIComponent(currentMonsterKey)}`);
-                const data = await res.json();
+                const data = await fetchGitHubCached(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${CARDS_DIR}/${encodeURIComponent(currentMonsterKey)}`);
 
                 if (Array.isArray(data)) {
                     cSelect.innerHTML = '';
@@ -329,7 +312,6 @@
 
             const cardData = database[currentCardKey];
 
-            // 1. HP Zone
             if (cardData.hpZone) {
                 const hpDiv = createZoneElement(cardData.hpZone, 'hp');
                 hpDiv.id = 'current-hp-display';
@@ -338,7 +320,6 @@
                 container.appendChild(hpDiv);
             }
 
-            // 2. Break 'X' Token Zones
             cardData.tokenZones.forEach(token => {
                 const tDiv = createZoneElement(token, 'token');
                 const state = tokenStates[token.id] || 0;
@@ -356,7 +337,6 @@
                 container.appendChild(tDiv);
             });
 
-            // 3. Color-Coded Status & Element Zones
             (cardData.statusZones || []).forEach(statusToken => {
                 const sDiv = createZoneElement(statusToken, 'status');
                 const state = tokenStates[statusToken.id] || 0;
@@ -389,7 +369,6 @@
         }
 
         function applyStatusStyle(element, state, color) {
-            // Remove previous color classes
             element.className = 'zone status-badge';
             if (state >= 1 && state <= 9) {
                 element.classList.add(`status-${color}`);
@@ -457,38 +436,57 @@
                 document.getElementById('btn-tool-status').classList.add('btn-active-tool');
                 text.innerText = "Click to add custom status boxes.";
             } else {
-                text.innerText = "Select a tool to modify the active image.";
+                text.innerText = "Click anywhere to see live coordinates!";
             }
         }
 
         function handleImageClick(e) {
-            if (!isEditMode || !pendingAction || !currentCardKey) return;
+            if (!isEditMode || !currentCardKey) return;
 
             const rect = document.getElementById('card-container').getBoundingClientRect();
-            const clickX = ((e.clientX - rect.left) / rect.width) * 100;
-            const clickY = ((e.clientY - rect.top) / rect.height) * 100;
+            const clickX = parseFloat((((e.clientX - rect.left) / rect.width) * 100).toFixed(1));
+            const clickY = parseFloat((((e.clientY - rect.top) / rect.height) * 100).toFixed(1));
+
+            // Display live coordinates in the banner
+            document.getElementById('edit-instruction').innerText = `Clicked Position -> x: ${clickX}%, y: ${clickY}%`;
+
+            if (!pendingAction) return;
 
             const cardData = database[currentCardKey];
 
             if (pendingAction === 'hp') {
-                cardData.hpZone = { x: clickX - 5, y: clickY - 7, w: 10, h: 14 };
+                cardData.hpZone = { x: parseFloat((clickX - 5).toFixed(1)), y: parseFloat((clickY - 7).toFixed(1)), w: 10, h: 14 };
                 setPendingAction(null);
             } else if (pendingAction === 'token') {
                 cardData.tokenZones.push({
                     id: Date.now().toString() + Math.random().toString(36).substr(2, 4),
-                    x: clickX - 5.5, y: clickY - 7.5, w: 11, h: 15
+                    x: parseFloat((clickX - 5.5).toFixed(1)), 
+                    y: parseFloat((clickY - 7.5).toFixed(1)), 
+                    w: 11, h: 15
                 });
             } else if (pendingAction === 'status') {
                 if (!cardData.statusZones) cardData.statusZones = [];
                 cardData.statusZones.push({
                     id: Date.now().toString() + Math.random().toString(36).substr(2, 4),
                     color: 'dragon',
-                    x: clickX - 2.75, y: clickY - 3.75, w: 5.5, h: 7.5
+                    x: parseFloat((clickX - 2.75).toFixed(1)), 
+                    y: parseFloat((clickY - 3.75).toFixed(1)), 
+                    w: 5.5, h: 7.5
                 });
             }
 
             saveDatabase();
             renderZones();
+        }
+
+        // --- EXPORT FUNCTION TO COPY EXACT COORDINATES ---
+        function exportCoordinates() {
+            if (!currentCardKey || !database[currentCardKey]) return;
+            const statusData = database[currentCardKey].statusZones || [];
+            const formattedJS = JSON.stringify(statusData, null, 4);
+            
+            console.log("Exported Status Array:\n", formattedJS);
+            prompt("Copy this JS array and paste it into defaultStatusZones:", formattedJS);
         }
 
         function saveMaxHp() {
