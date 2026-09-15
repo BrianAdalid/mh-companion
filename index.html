@@ -186,21 +186,21 @@
         const REPO_NAME = "mh-companion";
         const CARDS_DIR = "Cards";
 
-// Precision-tuned Coordinates for Elements & Statuses
+// Precision Dead-Center Coordinates for Elements & Statuses
         const defaultStatusZones = [
             // Elements (Left Pentagon Grid)
-            { id: 'fire', color: 'fire', x: 4.6, y: 73.7, w: 4.8, h: 6.8 },
-            { id: 'ice', color: 'ice', x: 11.6, y: 73.7, w: 4.8, h: 6.8 },
-            { id: 'thunder', color: 'thunder', x: 8.1, y: 80.3, w: 4.8, h: 6.8 },
-            { id: 'water', color: 'water', x: 4.6, y: 86.9, w: 4.8, h: 6.8 },
-            { id: 'dragon', color: 'dragon', x: 11.6, y: 86.9, w: 4.8, h: 6.8 },
+            { id: 'fire', color: 'fire', x: 4.0, y: 72.7, w: 4.8, h: 6.8 },
+            { id: 'ice', color: 'ice', x: 11.0, y: 72.7, w: 4.8, h: 6.8 },
+            { id: 'thunder', color: 'thunder', x: 7.5, y: 79.2, w: 4.8, h: 6.8 },
+            { id: 'water', color: 'water', x: 4.0, y: 85.8, w: 4.8, h: 6.8 },
+            { id: 'dragon', color: 'dragon', x: 11.0, y: 85.8, w: 4.8, h: 6.8 },
             
             // Statuses (Right Hexagon Grid)
-            { id: 'para', color: 'para', x: 20.6, y: 73.7, w: 4.8, h: 6.8 },
-            { id: 'blast', color: 'blast', x: 27.6, y: 73.7, w: 4.8, h: 6.8 },
-            { id: 'sleep', color: 'sleep', x: 24.1, y: 80.3, w: 4.8, h: 6.8 },
-            { id: 'poison', color: 'poison', x: 20.6, y: 86.9, w: 4.8, h: 6.8 },
-            { id: 'stun', color: 'stun', x: 27.6, y: 86.9, w: 4.8, h: 6.8 }
+            { id: 'para', color: 'para', x: 19.9, y: 72.7, w: 4.8, h: 6.8 },
+            { id: 'blast', color: 'blast', x: 26.9, y: 72.7, w: 4.8, h: 6.8 },
+            { id: 'sleep', color: 'sleep', x: 23.4, y: 79.2, w: 4.8, h: 6.8 },
+            { id: 'poison', color: 'poison', x: 19.9, y: 85.8, w: 4.8, h: 6.8 },
+            { id: 'stun', color: 'stun', x: 26.9, y: 85.8, w: 4.8, h: 6.8 }
         ];
 
         let database = JSON.parse(localStorage.getItem('mh_hosted_database')) || {};
