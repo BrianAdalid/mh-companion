@@ -186,17 +186,21 @@
         const REPO_NAME = "mh-companion";
         const CARDS_DIR = "Cards";
 
+// Calibrated Default Coordinates for Elements & Statuses
         const defaultStatusZones = [
-            { id: 'fire', color: 'fire', x: 6.5, y: 77.0, w: 5.5, h: 7.5 },
-            { id: 'ice', color: 'ice', x: 13.3, y: 77.0, w: 5.5, h: 7.5 },
-            { id: 'thunder', color: 'thunder', x: 10, y: 84.0, w: 5.5, h: 7.5 },
-            { id: 'water', color: 'water', x: 6.5, y: 91.0, w: 5.5, h: 7.5 },
-            { id: 'dragon', color: 'dragon', x: 13.5, y: 91.0, w: 5.5, h: 7.5 },
-            { id: 'para', color: 'para', x: 20.5, y: 71.0, w: 5.5, h: 7.5 },
-            { id: 'blast', color: 'blast', x: 27.0, y: 71.0, w: 5.5, h: 7.5 },
-            { id: 'sleep', color: 'sleep', x: 23.8, y: 77.5, w: 5.5, h: 7.5 },
-            { id: 'poison', color: 'poison', x: 20.5, y: 84.0, w: 5.5, h: 7.5 },
-            { id: 'stun', color: 'stun', x: 27.0, y: 84.0, w: 5.5, h: 7.5 }
+            // Elements (Left Pentagon Box)
+            { id: 'fire', color: 'fire', x: 4.6, y: 71.2, w: 4.8, h: 6.8 },
+            { id: 'ice', color: 'ice', x: 11.8, y: 71.2, w: 4.8, h: 6.8 },
+            { id: 'thunder', color: 'thunder', x: 8.2, y: 78.0, w: 4.8, h: 6.8 },
+            { id: 'water', color: 'water', x: 4.6, y: 84.8, w: 4.8, h: 6.8 },
+            { id: 'dragon', color: 'dragon', x: 11.8, y: 84.8, w: 4.8, h: 6.8 },
+            
+            // Statuses (Right Hexagon Box)
+            { id: 'para', color: 'para', x: 20.2, y: 71.2, w: 4.8, h: 6.8 },
+            { id: 'blast', color: 'blast', x: 27.4, y: 71.2, w: 4.8, h: 6.8 },
+            { id: 'sleep', color: 'sleep', x: 23.8, y: 78.0, w: 4.8, h: 6.8 },
+            { id: 'poison', color: 'poison', x: 20.2, y: 84.8, w: 4.8, h: 6.8 },
+            { id: 'stun', color: 'stun', x: 27.4, y: 84.8, w: 4.8, h: 6.8 }
         ];
 
         let database = JSON.parse(localStorage.getItem('mh_hosted_database')) || {};
