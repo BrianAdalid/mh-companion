@@ -99,6 +99,7 @@
         
         .edit-active .zone { background: rgba(230, 145, 56, 0.4); border: 2px dashed #e69138; }
 
+        /* Smaller Solid Square HP Box */
         .hp-zone { 
             border-radius: 6px;
             background: #c9302c !important;
@@ -127,8 +128,12 @@
 <body>
 
     <div class="panel">
-        <select id="monster-select" onchange="onMonsterChange()"></select>
-        <select id="card-select" onchange="loadCardImage()"></select>
+        <select id="monster-select" onchange="onMonsterChange()">
+            <option value="">Loading monsters from GitHub...</option>
+        </select>
+        <select id="card-select" onchange="loadCardImage()">
+            <option value="">Select image...</option>
+        </select>
         <button class="btn-edit" onclick="toggleEditMode()">Edit Mode</button>
     </div>
 
@@ -146,15 +151,9 @@
     </div>
 
     <script>
-        // ADD ALL YOUR MONSTER FOLDER NAMES TO THIS ARRAY:
-        const monsterList = [
-            "Elder Dragon Teostra",
-            "Fanged Wyvern Great Jagras",
-            "Fanged Wyvern Tobi-Kadachi"
-        ];
-
-        // Image names inside each monster folder (assumes 1.jpg, 2.jpg, 3.jpg)
-        const imageNames = ["1.jpg", "2.jpg", "3.jpg"];
+        const REPO_OWNER = "BrianAdalid";
+        const REPO_NAME = "mh-companion";
+        const CARDS_DIR = "Cards";
 
         let database = JSON.parse(localStorage.getItem('mh_hosted_database')) || {};
         let currentMonsterKey = '';
@@ -164,36 +163,79 @@
         let isEditMode = false;
         let pendingAction = null;
 
-        function initApp() {
+        async function initApp() {
             const mSelect = document.getElementById('monster-select');
-            mSelect.innerHTML = '';
-            
-            monsterList.sort().forEach(monsterName => {
-                const opt = document.createElement('option');
-                opt.value = monsterName;
-                opt.textContent = monsterName;
-                mSelect.appendChild(opt);
-            });
+            mSelect.innerHTML = '<option value="">Loading monsters...</option>';
 
-            if (monsterList.length > 0) onMonsterChange();
+            try {
+                // Fetch monster folders directly from GitHub API
+                const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${CARDS_DIR}`);
+                const data = await res.json();
+
+                if (Array.isArray(data)) {
+                    mSelect.innerHTML = '';
+                    const folderItems = data.filter(item => item.type === 'dir');
+                    
+                    folderItems.forEach(item => {
+                        const opt = document.createElement('option');
+                        opt.value = item.name;
+                        opt.textContent = item.name;
+                        mSelect.appendChild(opt);
+                    });
+
+                    if (folderItems.length > 0) {
+                        onMonsterChange();
+                    }
+                } else {
+                    mSelect.innerHTML = '<option value="">Error loading Cards folder</option>';
+                }
+            } catch (err) {
+                console.error("Failed to fetch folder list:", err);
+                mSelect.innerHTML = '<option value="">Error connecting to GitHub</option>';
+            }
         }
 
-        function onMonsterChange() {
+        async function onMonsterChange() {
             const mSelect = document.getElementById('monster-select');
             currentMonsterKey = mSelect.value;
-            
+            if (!currentMonsterKey) return;
+
             const cSelect = document.getElementById('card-select');
-            cSelect.innerHTML = '';
+            cSelect.innerHTML = '<option value="">Loading images...</option>';
 
-            imageNames.forEach(imgName => {
-                const fullPathKey = `Cards/${currentMonsterKey}/${imgName}`;
-                const opt = document.createElement('option');
-                opt.value = fullPathKey;
-                opt.textContent = imgName;
-                cSelect.appendChild(opt);
-            });
+            try {
+                // Fetch image files inside the selected monster folder
+                const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${CARDS_DIR}/${encodeURIComponent(currentMonsterKey)}`);
+                const data = await res.json();
 
-            loadCardImage();
+                if (Array.isArray(data)) {
+                    cSelect.innerHTML = '';
+                    const imageFiles = data.filter(item => item.type === 'file' && /\.(jpg|jpeg|png|webp)$/i.test(item.name));
+                    
+                    imageFiles.forEach(file => {
+                        const opt = document.createElement('option');
+                        opt.value = file.path; // e.g. "Cards/Anjanath/1.jpg"
+                        opt.textContent = file.name;
+                        cSelect.appendChild(opt);
+                    });
+
+                    if (imageFiles.length > 0) {
+                        loadCardImage();
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load images:", err);
+                // Fallback to 1.jpg, 2.jpg, 3.jpg if network fails
+                cSelect.innerHTML = '';
+                ["1.jpg", "2.jpg", "3.jpg"].forEach(imgName => {
+                    const fullPathKey = `Cards/${currentMonsterKey}/${imgName}`;
+                    const opt = document.createElement('option');
+                    opt.value = fullPathKey;
+                    opt.textContent = imgName;
+                    cSelect.appendChild(opt);
+                });
+                loadCardImage();
+            }
         }
 
         function loadCardImage() {
