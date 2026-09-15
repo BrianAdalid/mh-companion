@@ -99,7 +99,6 @@
         
         .edit-active .zone { background: rgba(230, 145, 56, 0.4); border: 2px dashed #e69138; }
 
-        /* Smaller Solid Square HP Box */
         .hp-zone { 
             border-radius: 6px;
             background: #c9302c !important;
@@ -125,18 +124,29 @@
         }
         @media (min-width: 800px) { .token-stage-2 { font-size: 50px; } }
 
-        /* Element & Status Counter Badges (Purple Circle) */
-        .token-status-active {
-            background: rgba(147, 51, 234, 0.85) !important;
-            border: 3px solid #c084fc !important;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.7);
+        /* Base Status Circle */
+        .status-badge {
             border-radius: 50% !important;
-            font-size: 4vw;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.7);
+            font-size: 3.5vw;
         }
-        @media (min-width: 800px) { .token-status-active { font-size: 30px; } }
+        @media (min-width: 800px) { .status-badge { font-size: 26px; } }
 
-        /* Landscape Mode Optimization */
-        @media (orientation: landscape) {
+        /* Icon Colors */
+        .status-fire { background: rgba(220, 38, 38, 0.95) !important; border: 2px solid #f87171 !important; }
+        .status-ice { background: rgba(6, 182, 212, 0.95) !important; border: 2px solid #67e8f9 !important; }
+        .status-thunder { background: rgba(234, 179, 8, 0.95) !important; border: 2px solid #fde047 !important; color: #000 !important; text-shadow: none !important; }
+        .status-water { background: rgba(37, 99, 235, 0.95) !important; border: 2px solid #60a5fa !important; }
+        .status-dragon { background: rgba(147, 51, 234, 0.95) !important; border: 2px solid #c084fc !important; }
+
+        .status-para { background: rgba(202, 138, 4, 0.95) !important; border: 2px solid #fef08a !important; color: #000 !important; text-shadow: none !important; }
+        .status-blast { background: rgba(194, 65, 12, 0.95) !important; border: 2px solid #ffedd5 !important; }
+        .status-sleep { background: rgba(124, 58, 237, 0.95) !important; border: 2px solid #ddd6fe !important; }
+        .status-poison { background: rgba(219, 39, 119, 0.95) !important; border: 2px solid #fbcfe8 !important; }
+        .status-stun { background: rgba(250, 204, 21, 0.95) !important; border: 2px solid #fef08a !important; color: #000 !important; text-shadow: none !important; }
+
+        /* Mobile-Only Landscape Mode (Restricted to max-height 600px so Desktop Monitors stay normal) */
+        @media (orientation: landscape) and (max-height: 600px) {
             body {
                 padding: 0;
                 margin: 0;
@@ -163,7 +173,7 @@
             .zone { font-size: 4vh; }
             .hp-zone { font-size: 3.5vh; }
             .token-stage-2 { font-size: 7vh; }
-            .token-status-active { font-size: 3.5vh; }
+            .status-badge { font-size: 3vh; }
         }
     </style>
 </head>
@@ -184,7 +194,7 @@
         <input type="number" id="edit-max-hp" placeholder="Max HP" onchange="saveMaxHp()">
         <button id="btn-tool-hp" onclick="setPendingAction('hp')">1. Place HP Box</button>
         <button id="btn-tool-token" onclick="setPendingAction('token')">2. Add 'X' Break Box</button>
-        <button id="btn-tool-status" onclick="setPendingAction('status')">3. Add Element/Status Counter</button>
+        <button id="btn-tool-status" onclick="setPendingAction('status')">3. Add Status Counter</button>
         <button class="btn-danger" onclick="clearZones()">Clear Boxes</button>
     </div>
 
@@ -197,6 +207,23 @@
         const REPO_OWNER = "BrianAdalid";
         const REPO_NAME = "mh-companion";
         const CARDS_DIR = "Cards";
+
+        // Pre-mapped default locations for all 10 Elemental & Status icons
+        const defaultStatusZones = [
+            // Elements (Left Panel)
+            { id: 'fire', color: 'fire', x: 5.5, y: 74.0, w: 5.5, h: 7.5 },
+            { id: 'ice', color: 'ice', x: 12.0, y: 74.0, w: 5.5, h: 7.5 },
+            { id: 'thunder', color: 'thunder', x: 8.8, y: 80.5, w: 5.5, h: 7.5 },
+            { id: 'water', color: 'water', x: 5.5, y: 87.2, w: 5.5, h: 7.5 },
+            { id: 'dragon', color: 'dragon', x: 12.0, y: 87.2, w: 5.5, h: 7.5 },
+            
+            // Statuses (Right Panel)
+            { id: 'para', color: 'para', x: 22.0, y: 74.0, w: 5.5, h: 7.5 },
+            { id: 'blast', color: 'blast', x: 28.5, y: 74.0, w: 5.5, h: 7.5 },
+            { id: 'sleep', color: 'sleep', x: 25.3, y: 80.5, w: 5.5, h: 7.5 },
+            { id: 'poison', color: 'poison', x: 22.0, y: 87.2, w: 5.5, h: 7.5 },
+            { id: 'stun', color: 'stun', x: 28.5, y: 87.2, w: 5.5, h: 7.5 }
+        ];
 
         let database = JSON.parse(localStorage.getItem('mh_hosted_database')) || {};
         let currentMonsterKey = '';
@@ -283,14 +310,9 @@
                     maxHp: 50,
                     hpZone: null,
                     tokenZones: [],
-                    statusZones: []
+                    statusZones: JSON.parse(JSON.stringify(defaultStatusZones))
                 };
                 saveDatabase();
-            }
-
-            // Ensure backward compatibility for cards stored in older database versions
-            if (!database[currentCardKey].statusZones) {
-                database[currentCardKey].statusZones = [];
             }
 
             const cardData = database[currentCardKey];
@@ -334,19 +356,19 @@
                 container.appendChild(tDiv);
             });
 
-            // 3. Element / Status Counter Zones
+            // 3. Color-Coded Status & Element Zones
             (cardData.statusZones || []).forEach(statusToken => {
                 const sDiv = createZoneElement(statusToken, 'status');
                 const state = tokenStates[statusToken.id] || 0;
-                applyStatusStyle(sDiv, state);
+                applyStatusStyle(sDiv, state, statusToken.color || 'dragon');
 
                 if (!isEditMode) {
                     sDiv.onclick = (e) => { e.stopPropagation(); cycleStatusState(sDiv, statusToken.id); };
                     sDiv.oncontextmenu = (e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        tokenStates[statusToken.id] = 0; // Reset counter
-                        applyStatusStyle(sDiv, 0);
+                        tokenStates[statusToken.id] = 0;
+                        applyStatusStyle(sDiv, 0, statusToken.color || 'dragon');
                     };
                 }
                 container.appendChild(sDiv);
@@ -366,10 +388,11 @@
             }
         }
 
-        function applyStatusStyle(element, state) {
-            element.classList.remove('token-status-active');
+        function applyStatusStyle(element, state, color) {
+            // Remove previous color classes
+            element.className = 'zone status-badge';
             if (state >= 1 && state <= 9) {
-                element.classList.add('token-status-active');
+                element.classList.add(`status-${color}`);
                 element.innerText = state;
             } else {
                 element.innerText = "";
@@ -385,9 +408,9 @@
 
         function cycleStatusState(element, statusId) {
             let currentState = tokenStates[statusId] || 0;
-            currentState = (currentState + 1) % 10; // Cycles 0 -> 1 to 9 -> 0
+            currentState = (currentState + 1) % 10;
             tokenStates[statusId] = currentState;
-            applyStatusStyle(element, currentState);
+            renderZones();
         }
 
         function createZoneElement(data, type) {
@@ -432,7 +455,7 @@
                 text.innerText = "CONTINUOUS MODE: Keep clicking to place multiple 'X' Break Boxes!";
             } else if (action === 'status') {
                 document.getElementById('btn-tool-status').classList.add('btn-active-tool');
-                text.innerText = "CONTINUOUS MODE: Keep clicking pentagon/hexagon icons to add Status Counters!";
+                text.innerText = "Click to add custom status boxes.";
             } else {
                 text.innerText = "Select a tool to modify the active image.";
             }
@@ -457,10 +480,10 @@
                 });
             } else if (pendingAction === 'status') {
                 if (!cardData.statusZones) cardData.statusZones = [];
-                // Round 7x10 box sized to fit over pentagon & hexagon icons
                 cardData.statusZones.push({
                     id: Date.now().toString() + Math.random().toString(36).substr(2, 4),
-                    x: clickX - 3.5, y: clickY - 5, w: 7, h: 10
+                    color: 'dragon',
+                    x: clickX - 2.75, y: clickY - 3.75, w: 5.5, h: 7.5
                 });
             }
 
