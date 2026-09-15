@@ -248,7 +248,7 @@
             if (!database[currentCardKey]) {
                 database[currentCardKey] = {
                     maxHp: 50,
-                    hpZone: { x: 24.5, y: 11, w: 10, h: 14 },
+                    hpZone: null,
                     tokenZones: []
                 };
                 saveDatabase();
@@ -368,7 +368,7 @@
             const cardData = database[currentCardKey];
 
             if (pendingAction === 'hp') {
-                cardData.hpZone = { x: clickX - 5, y: clickY - 7, w: 10, h: 14 };
+                cardData.hpZone = { x: clickX - 5, y: clickY - 7, w: 12, h: 17 };
                 setPendingAction(null);
             } else if (pendingAction === 'token') {
                 cardData.tokenZones.push({
