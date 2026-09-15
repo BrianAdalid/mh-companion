@@ -109,6 +109,7 @@
         }
         @media (min-width: 800px) { .hp-zone { font-size: 30px; } }
 
+        /* Break Token Stages */
         .token-stage-1 {
             background: #d97706 !important;
             border: 3px solid #fbbf24 !important;
@@ -123,6 +124,47 @@
             font-weight: 900;
         }
         @media (min-width: 800px) { .token-stage-2 { font-size: 50px; } }
+
+        /* Element & Status Counter Badges (Purple Circle) */
+        .token-status-active {
+            background: rgba(147, 51, 234, 0.85) !important;
+            border: 3px solid #c084fc !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.7);
+            border-radius: 50% !important;
+            font-size: 4vw;
+        }
+        @media (min-width: 800px) { .token-status-active { font-size: 30px; } }
+
+        /* Landscape Mode Optimization */
+        @media (orientation: landscape) {
+            body {
+                padding: 0;
+                margin: 0;
+                overflow: hidden;
+                height: 100vh;
+                justify-content: center;
+            }
+
+            .panel { display: none !important; }
+
+            #card-container {
+                height: 100vh;
+                width: auto;
+                max-width: none;
+                display: inline-block;
+            }
+
+            #card-image {
+                height: 100vh;
+                width: auto;
+                max-width: none;
+            }
+
+            .zone { font-size: 4vh; }
+            .hp-zone { font-size: 3.5vh; }
+            .token-stage-2 { font-size: 7vh; }
+            .token-status-active { font-size: 3.5vh; }
+        }
     </style>
 </head>
 <body>
@@ -141,7 +183,8 @@
         <div class="instruction" id="edit-instruction">Select a tool to modify the card layout.</div>
         <input type="number" id="edit-max-hp" placeholder="Max HP" onchange="saveMaxHp()">
         <button id="btn-tool-hp" onclick="setPendingAction('hp')">1. Place HP Box</button>
-        <button id="btn-tool-token" onclick="setPendingAction('token')">2. Add 'X' Break Box (Continuous)</button>
+        <button id="btn-tool-token" onclick="setPendingAction('token')">2. Add 'X' Break Box</button>
+        <button id="btn-tool-status" onclick="setPendingAction('status')">3. Add Element/Status Counter</button>
         <button class="btn-danger" onclick="clearZones()">Clear Boxes</button>
     </div>
 
@@ -168,7 +211,6 @@
             mSelect.innerHTML = '<option value="">Loading monsters...</option>';
 
             try {
-                // Fetch monster folders directly from GitHub API
                 const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${CARDS_DIR}`);
                 const data = await res.json();
 
@@ -183,11 +225,7 @@
                         mSelect.appendChild(opt);
                     });
 
-                    if (folderItems.length > 0) {
-                        onMonsterChange();
-                    }
-                } else {
-                    mSelect.innerHTML = '<option value="">Error loading Cards folder</option>';
+                    if (folderItems.length > 0) onMonsterChange();
                 }
             } catch (err) {
                 console.error("Failed to fetch folder list:", err);
@@ -204,7 +242,6 @@
             cSelect.innerHTML = '<option value="">Loading images...</option>';
 
             try {
-                // Fetch image files inside the selected monster folder
                 const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${CARDS_DIR}/${encodeURIComponent(currentMonsterKey)}`);
                 const data = await res.json();
 
@@ -214,18 +251,14 @@
                     
                     imageFiles.forEach(file => {
                         const opt = document.createElement('option');
-                        opt.value = file.path; // e.g. "Cards/Anjanath/1.jpg"
+                        opt.value = file.path;
                         opt.textContent = file.name;
                         cSelect.appendChild(opt);
                     });
 
-                    if (imageFiles.length > 0) {
-                        loadCardImage();
-                    }
+                    if (imageFiles.length > 0) loadCardImage();
                 }
             } catch (err) {
-                console.error("Failed to load images:", err);
-                // Fallback to 1.jpg, 2.jpg, 3.jpg if network fails
                 cSelect.innerHTML = '';
                 ["1.jpg", "2.jpg", "3.jpg"].forEach(imgName => {
                     const fullPathKey = `Cards/${currentMonsterKey}/${imgName}`;
@@ -249,9 +282,15 @@
                 database[currentCardKey] = {
                     maxHp: 50,
                     hpZone: null,
-                    tokenZones: []
+                    tokenZones: [],
+                    statusZones: []
                 };
                 saveDatabase();
+            }
+
+            // Ensure backward compatibility for cards stored in older database versions
+            if (!database[currentCardKey].statusZones) {
+                database[currentCardKey].statusZones = [];
             }
 
             const cardData = database[currentCardKey];
@@ -268,6 +307,7 @@
 
             const cardData = database[currentCardKey];
 
+            // 1. HP Zone
             if (cardData.hpZone) {
                 const hpDiv = createZoneElement(cardData.hpZone, 'hp');
                 hpDiv.id = 'current-hp-display';
@@ -276,6 +316,7 @@
                 container.appendChild(hpDiv);
             }
 
+            // 2. Break 'X' Token Zones
             cardData.tokenZones.forEach(token => {
                 const tDiv = createZoneElement(token, 'token');
                 const state = tokenStates[token.id] || 0;
@@ -292,6 +333,24 @@
                 }
                 container.appendChild(tDiv);
             });
+
+            // 3. Element / Status Counter Zones
+            (cardData.statusZones || []).forEach(statusToken => {
+                const sDiv = createZoneElement(statusToken, 'status');
+                const state = tokenStates[statusToken.id] || 0;
+                applyStatusStyle(sDiv, state);
+
+                if (!isEditMode) {
+                    sDiv.onclick = (e) => { e.stopPropagation(); cycleStatusState(sDiv, statusToken.id); };
+                    sDiv.oncontextmenu = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        tokenStates[statusToken.id] = 0; // Reset counter
+                        applyStatusStyle(sDiv, 0);
+                    };
+                }
+                container.appendChild(sDiv);
+            });
         }
 
         function applyTokenStyle(element, state) {
@@ -307,11 +366,28 @@
             }
         }
 
+        function applyStatusStyle(element, state) {
+            element.classList.remove('token-status-active');
+            if (state >= 1 && state <= 9) {
+                element.classList.add('token-status-active');
+                element.innerText = state;
+            } else {
+                element.innerText = "";
+            }
+        }
+
         function cycleTokenState(element, tokenId) {
             let currentState = tokenStates[tokenId] || 0;
             currentState = (currentState + 1) % 11;
             tokenStates[tokenId] = currentState;
             applyTokenStyle(element, currentState);
+        }
+
+        function cycleStatusState(element, statusId) {
+            let currentState = tokenStates[statusId] || 0;
+            currentState = (currentState + 1) % 10; // Cycles 0 -> 1 to 9 -> 0
+            tokenStates[statusId] = currentState;
+            applyStatusStyle(element, currentState);
         }
 
         function createZoneElement(data, type) {
@@ -346,6 +422,7 @@
             const text = document.getElementById('edit-instruction');
             document.getElementById('btn-tool-hp').classList.remove('btn-active-tool');
             document.getElementById('btn-tool-token').classList.remove('btn-active-tool');
+            document.getElementById('btn-tool-status').classList.remove('btn-active-tool');
 
             if (action === 'hp') {
                 document.getElementById('btn-tool-hp').classList.add('btn-active-tool');
@@ -353,6 +430,9 @@
             } else if (action === 'token') {
                 document.getElementById('btn-tool-token').classList.add('btn-active-tool');
                 text.innerText = "CONTINUOUS MODE: Keep clicking to place multiple 'X' Break Boxes!";
+            } else if (action === 'status') {
+                document.getElementById('btn-tool-status').classList.add('btn-active-tool');
+                text.innerText = "CONTINUOUS MODE: Keep clicking pentagon/hexagon icons to add Status Counters!";
             } else {
                 text.innerText = "Select a tool to modify the active image.";
             }
@@ -368,12 +448,19 @@
             const cardData = database[currentCardKey];
 
             if (pendingAction === 'hp') {
-                cardData.hpZone = { x: clickX - 5, y: clickY - 7, w: 12, h: 17 };
+                cardData.hpZone = { x: clickX - 5, y: clickY - 7, w: 10, h: 14 };
                 setPendingAction(null);
             } else if (pendingAction === 'token') {
                 cardData.tokenZones.push({
                     id: Date.now().toString() + Math.random().toString(36).substr(2, 4),
                     x: clickX - 5.5, y: clickY - 7.5, w: 11, h: 15
+                });
+            } else if (pendingAction === 'status') {
+                if (!cardData.statusZones) cardData.statusZones = [];
+                // Round 7x10 box sized to fit over pentagon & hexagon icons
+                cardData.statusZones.push({
+                    id: Date.now().toString() + Math.random().toString(36).substr(2, 4),
+                    x: clickX - 3.5, y: clickY - 5, w: 7, h: 10
                 });
             }
 
@@ -396,6 +483,7 @@
             if (confirm("Clear all interaction boxes for this image?")) {
                 database[currentCardKey].hpZone = null;
                 database[currentCardKey].tokenZones = [];
+                database[currentCardKey].statusZones = [];
                 saveDatabase();
                 renderZones();
             }
