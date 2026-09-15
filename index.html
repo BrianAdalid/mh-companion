@@ -189,20 +189,24 @@
 // Perfectly Centered Coordinates (Calculated via grid symmetry)
         const defaultStatusZones = [
             // Elements (Left Pentagon Grid)
-            { id: 'fire', color: 'fire', x: 4.3, y: 73.2, w: 4.8, h: 6.8 },
-            { id: 'ice', color: 'ice', x: 11.3, y: 73.2, w: 4.8, h: 6.8 },
-            { id: 'thunder', color: 'thunder', x: 7.8, y: 79.8, w: 4.8, h: 6.8 },
-            { id: 'water', color: 'water', x: 4.3, y: 86.4, w: 4.8, h: 6.8 },
-            { id: 'dragon', color: 'dragon', x: 11.3, y: 86.4, w: 4.8, h: 6.8 },
+            { id: 'fire', color: 'fire', x: 4.3, y: 73.6, w: 4.4, h: 6.2 },
+            { id: 'ice', color: 'ice', x: 11.1, y: 73.6, w: 4.4, h: 6.2 },
+            { id: 'thunder', color: 'thunder', x: 7.7, y: 80.3, w: 4.4, h: 6.2 },
+            { id: 'water', color: 'water', x: 4.3, y: 87.3, w: 4.4, h: 6.2 },
+            { id: 'dragon', color: 'dragon', x: 11.1, y: 87.3, w: 4.4, h: 6.2 },
             
             // Statuses (Right Hexagon Grid)
-            { id: 'para', color: 'para', x: 20.3, y: 73.2, w: 4.8, h: 6.8 },
-            { id: 'blast', color: 'blast', x: 27.3, y: 73.2, w: 4.8, h: 6.8 },
-            { id: 'sleep', color: 'sleep', x: 23.8, y: 79.8, w: 4.8, h: 6.8 },
-            { id: 'poison', color: 'poison', x: 20.3, y: 86.4, w: 4.8, h: 6.8 },
-            { id: 'stun', color: 'stun', x: 27.3, y: 86.4, w: 4.8, h: 6.8 }
+            { id: 'para', color: 'para', x: 21.8, y: 73.2, w: 4.4, h: 6.2 },
+            { id: 'blast', color: 'blast', x: 28.7, y: 73.2, w: 4.4, h: 6.2 },
+            { id: 'sleep', color: 'sleep', x: 25.2, y: 79.8, w: 4.4, h: 6.2 },
+            { id: 'poison', color: 'poison', x: 21.8, y: 86.9, w: 4.4, h: 6.2 },
+            { id: 'stun', color: 'stun', x: 28.7, y: 87.1, w: 4.4, h: 6.2 }
         ];
-
+    left: 28.7%;
+    top: 87.1%;
+    width: 4.4%;
+    height: 6.2%;
+}
         let database = JSON.parse(localStorage.getItem('mh_hosted_database')) || {};
         let currentMonsterKey = '';
         let currentCardKey = '';
