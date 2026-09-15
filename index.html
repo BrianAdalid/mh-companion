@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MH Companion Pro</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .panel {
+            width: 100%;
+            max-width: 800px;
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        select, input[type="number"], button {
+            padding: 8px;
+            font-size: 14px;
+            background-color: #333;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 5px;
+        }
+        
+        select { flex-grow: 1; min-width: 150px; }
+        
+        button {
+            background-color: #2b78e4;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { background-color: #1b5bb5; }
+        
+        .btn-danger { background-color: #c9302c; }
+        .btn-danger:hover { background-color: #9f221f; }
+        
+        .btn-edit { background-color: #e69138; }
+        .btn-edit:hover { background-color: #b46b21; }
+
+        .btn-active-tool {
+            background-color: #27ae60 !important;
+            box-shadow: 0 0 8px #2ecc71;
+        }
+
+        #edit-panel { display: none; background: #3a2a1a; border: 1px solid #e69138; }
+        .edit-active #edit-panel { display: flex; }
+        .edit-active #card-image { cursor: crosshair; }
+        .instruction { width: 100%; color: #ffd966; font-size: 14px; text-align: center; font-weight: bold; }
+
+        #card-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            user-select: none;
+        }
+
+        #card-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+        }
+
+        .zone {
+            position: absolute;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4vw;
+            font-weight: bold;
+            color: white;
+            text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px dashed rgba(255,255,255,0.5);
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        
+        @media (min-width: 800px) { .zone { font-size: 32px; } }
+        
+        .edit-active .zone { background: rgba(230, 145, 56, 0.4); border: 2px dashed #e69138; }
+
+        .hp-zone { 
+            border-radius: 6px;
+            background: #c9302c !important;
+            border: 3px solid #ff6b6b;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
+            font-size: 3.8vw;
+        }
+        @media (min-width: 800px) { .hp-zone { font-size: 30px; } }
+
+        .token-stage-1 {
+            background: #d97706 !important;
+            border: 3px solid #fbbf24 !important;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.6);
+        }
+
+        .token-stage-2 {
+            background: #991b1b !important;
+            border: 3px solid #f87171 !important;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.6);
+            font-size: 7vw;
+            font-weight: 900;
+        }
+        @media (min-width: 800px) { .token-stage-2 { font-size: 50px; } }
+    </style>
+</head>
+<body>
+
+    <div class="panel">
+        <select id="monster-select" onchange="onMonsterChange()"></select>
+        <select id="card-select" onchange="loadCardImage()"></select>
+        <button class="btn-edit" onclick="toggleEditMode()">Edit Mode</button>
+    </div>
+
+    <div id="edit-panel" class="panel">
+        <div class="instruction" id="edit-instruction">Select a tool to modify the card layout.</div>
+        <input type="number" id="edit-max-hp" placeholder="Max HP" onchange="saveMaxHp()">
+        <button id="btn-tool-hp" onclick="setPendingAction('hp')">1. Place HP Box</button>
+        <button id="btn-tool-token" onclick="setPendingAction('token')">2. Add 'X' Break Box (Continuous)</button>
+        <button class="btn-danger" onclick="clearZones()">Clear Boxes</button>
+    </div>
+
+    <div id="card-container" onclick="handleImageClick(event)">
+        <img id="card-image" src="" alt="Select a monster card">
+        <div id="zones"></div>
+    </div>
+
+    <script>
+        // ADD ALL YOUR MONSTER FOLDER NAMES TO THIS ARRAY:
+        const monsterList = [
+            "Elder Dragon Teostra",
+            "Fanged Wyvern Great Jagras",
+            "Fanged Wyvern Tobi-Kadachi"
+        ];
+
+        // Image names inside each monster folder (assumes 1.jpg, 2.jpg, 3.jpg)
+        const imageNames = ["1.jpg", "2.jpg", "3.jpg"];
+
+        let database = JSON.parse(localStorage.getItem('mh_hosted_database')) || {};
+        let currentMonsterKey = '';
+        let currentCardKey = '';
+        let currentHp = 0;
+        let tokenStates = {}; 
+        let isEditMode = false;
+        let pendingAction = null;
+
+        function initApp() {
+            const mSelect = document.getElementById('monster-select');
+            mSelect.innerHTML = '';
+            
+            monsterList.sort().forEach(monsterName => {
+                const opt = document.createElement('option');
+                opt.value = monsterName;
+                opt.textContent = monsterName;
+                mSelect.appendChild(opt);
+            });
+
+            if (monsterList.length > 0) onMonsterChange();
+        }
+
+        function onMonsterChange() {
+            const mSelect = document.getElementById('monster-select');
+            currentMonsterKey = mSelect.value;
+            
+            const cSelect = document.getElementById('card-select');
+            cSelect.innerHTML = '';
+
+            imageNames.forEach(imgName => {
+                const fullPathKey = `cards/${currentMonsterKey}/${imgName}`;
+                const opt = document.createElement('option');
+                opt.value = fullPathKey;
+                opt.textContent = imgName;
+                cSelect.appendChild(opt);
+            });
+
+            loadCardImage();
+        }
+
+        function loadCardImage() {
+            const cSelect = document.getElementById('card-select');
+            currentCardKey = cSelect.value;
+            if (!currentCardKey) return;
+
+            document.getElementById('card-image').src = currentCardKey;
+
+            if (!database[currentCardKey]) {
+                database[currentCardKey] = {
+                    maxHp: 50,
+                    hpZone: { x: 24.5, y: 11, w: 10, h: 14 },
+                    tokenZones: []
+                };
+                saveDatabase();
+            }
+
+            const cardData = database[currentCardKey];
+            currentHp = cardData.maxHp;
+            document.getElementById('edit-max-hp').value = cardData.maxHp;
+
+            renderZones();
+        }
+
+        function renderZones() {
+            const container = document.getElementById('zones');
+            container.innerHTML = '';
+            if (!currentCardKey || !database[currentCardKey]) return;
+
+            const cardData = database[currentCardKey];
+
+            if (cardData.hpZone) {
+                const hpDiv = createZoneElement(cardData.hpZone, 'hp');
+                hpDiv.id = 'current-hp-display';
+                hpDiv.innerText = currentHp;
+                if (!isEditMode) hpDiv.onclick = (e) => { e.stopPropagation(); updateHealth(); };
+                container.appendChild(hpDiv);
+            }
+
+            cardData.tokenZones.forEach(token => {
+                const tDiv = createZoneElement(token, 'token');
+                const state = tokenStates[token.id] || 0;
+                applyTokenStyle(tDiv, state);
+
+                if (!isEditMode) {
+                    tDiv.onclick = (e) => { e.stopPropagation(); cycleTokenState(tDiv, token.id); };
+                    tDiv.oncontextmenu = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        tokenStates[token.id] = (tokenStates[token.id] === 10) ? 0 : 10;
+                        applyTokenStyle(tDiv, tokenStates[token.id]);
+                    };
+                }
+                container.appendChild(tDiv);
+            });
+        }
+
+        function applyTokenStyle(element, state) {
+            element.classList.remove('token-stage-1', 'token-stage-2');
+            if (state >= 1 && state <= 9) {
+                element.classList.add('token-stage-1');
+                element.innerText = state;
+            } else if (state === 10) {
+                element.classList.add('token-stage-2');
+                element.innerText = "X";
+            } else {
+                element.innerText = "";
+            }
+        }
+
+        function cycleTokenState(element, tokenId) {
+            let currentState = tokenStates[tokenId] || 0;
+            currentState = (currentState + 1) % 11;
+            tokenStates[tokenId] = currentState;
+            applyTokenStyle(element, currentState);
+        }
+
+        function createZoneElement(data, type) {
+            const div = document.createElement('div');
+            div.className = `zone ${type === 'hp' ? 'hp-zone' : ''}`;
+            div.style.left = data.x + '%';
+            div.style.top = data.y + '%';
+            div.style.width = data.w + '%';
+            div.style.height = data.h + '%';
+            return div;
+        }
+
+        function updateHealth() {
+            let input = prompt(`Current HP: ${currentHp}\nEnter damage (or -number to heal):`, "1");
+            if (input !== null && !isNaN(input) && input.trim() !== '') {
+                currentHp -= parseInt(input);
+                if (currentHp < 0) currentHp = 0;
+                if (currentHp > database[currentCardKey].maxHp) currentHp = database[currentCardKey].maxHp;
+                document.getElementById('current-hp-display').innerText = currentHp;
+            }
+        }
+
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            document.body.classList.toggle('edit-active', isEditMode);
+            setPendingAction(null);
+            renderZones();
+        }
+
+        function setPendingAction(action) {
+            pendingAction = action;
+            const text = document.getElementById('edit-instruction');
+            document.getElementById('btn-tool-hp').classList.remove('btn-active-tool');
+            document.getElementById('btn-tool-token').classList.remove('btn-active-tool');
+
+            if (action === 'hp') {
+                document.getElementById('btn-tool-hp').classList.add('btn-active-tool');
+                text.innerText = "Click image to place HP Box.";
+            } else if (action === 'token') {
+                document.getElementById('btn-tool-token').classList.add('btn-active-tool');
+                text.innerText = "CONTINUOUS MODE: Keep clicking to place multiple 'X' Break Boxes!";
+            } else {
+                text.innerText = "Select a tool to modify the active image.";
+            }
+        }
+
+        function handleImageClick(e) {
+            if (!isEditMode || !pendingAction || !currentCardKey) return;
+
+            const rect = document.getElementById('card-container').getBoundingClientRect();
+            const clickX = ((e.clientX - rect.left) / rect.width) * 100;
+            const clickY = ((e.clientY - rect.top) / rect.height) * 100;
+
+            const cardData = database[currentCardKey];
+
+            if (pendingAction === 'hp') {
+                cardData.hpZone = { x: clickX - 5, y: clickY - 7, w: 10, h: 14 };
+                setPendingAction(null);
+            } else if (pendingAction === 'token') {
+                cardData.tokenZones.push({
+                    id: Date.now().toString() + Math.random().toString(36).substr(2, 4),
+                    x: clickX - 5.5, y: clickY - 7.5, w: 11, h: 15
+                });
+            }
+
+            saveDatabase();
+            renderZones();
+        }
+
+        function saveMaxHp() {
+            if (!currentCardKey) return;
+            const newHp = parseInt(document.getElementById('edit-max-hp').value);
+            if (!isNaN(newHp)) {
+                database[currentCardKey].maxHp = newHp;
+                currentHp = newHp;
+                saveDatabase();
+                renderZones();
+            }
+        }
+
+        function clearZones() {
+            if (confirm("Clear all interaction boxes for this image?")) {
+                database[currentCardKey].hpZone = null;
+                database[currentCardKey].tokenZones = [];
+                saveDatabase();
+                renderZones();
+            }
+        }
+
+        function saveDatabase() {
+            localStorage.setItem('mh_hosted_database', JSON.stringify(database));
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
