@@ -349,7 +349,7 @@
     </div>
 
     <div id="edit-panel" class="panel">
-        <input type="number" id="edit-max-hp" placeholder="Max HP" onchange="saveMaxHp()">
+        <input type="number" id="edit-max-hp" placeholder="Max HP" oninput="saveMaxHp()">
         <button id="btn-tool-hp" onclick="setPendingAction('hp')">1. Place HP Box</button>
         <button id="btn-tool-token" onclick="setPendingAction('token')">2. Add 'X' Break Box</button>
         <button id="btn-tool-status" onclick="setPendingAction('status')">3. Add Status Counter</button>
@@ -696,7 +696,21 @@
             saveDatabase();
             renderZones();
         }
-
+		function saveMaxHp() {
+            if (!currentCardKey || !database[currentCardKey]) return;
+            const val = document.getElementById('edit-max-hp').value;
+            const newHp = parseInt(val, 10);
+            
+            if (!isNaN(newHp) && newHp > 0) {
+                database[currentCardKey].maxHp = newHp;
+                currentHp = newHp;
+                saveDatabase();
+                
+                // Live-update HP text on screen if an HP box is placed
+                const hpDisplay = document.getElementById('current-hp-display');
+                if (hpDisplay) hpDisplay.innerText = currentHp;
+            }
+        }
         function clearZones() {
             if (confirm("Clear all interaction boxes for this image?")) {
                 database[currentCardKey].hpZone = null;
