@@ -308,12 +308,12 @@
                 gap: 14px;
             }
 
-           /* Anchors image to absolute bottom edge */
+/* Anchors image to bottom and shifts view window to ~4.5 - 9 */
             #timedeck-active-card-container {
                 flex: 1;
                 display: flex;
                 justify-content: center;
-                align-items: flex-end; /* Hard-locks to bottom edge */
+                align-items: flex-end;
                 max-height: 75dvh;
                 height: 75dvh;
                 overflow: hidden;
@@ -323,8 +323,9 @@
             .timedeck-display-img {
                 width: 100%;
                 height: auto;
-                max-height: none; /* Lets top half push upward out of bounds */
+                max-height: none;
                 display: block;
+                transform: translateY(8%); /* Shifts crop window up from 5-10 to ~4.5-9 */
             }
 
             .modal-controls {
