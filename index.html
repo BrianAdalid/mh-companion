@@ -108,9 +108,9 @@
             background: #c9302c !important;
             border: 3px solid #ff6b6b;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
-            font-size: 3.8vw;
+            font-size: 5vw;
         }
-        @media (min-width: 800px) { .hp-zone { font-size: 30px; } }
+        @media (min-width: 800px) { .hp-zone { font-size: 40px; } }
 
         .token-stage-1 {
             background: #d97706 !important;
@@ -290,7 +290,7 @@
             }
 
             .zone { font-size: 3.5dvh; }
-            .hp-zone { font-size: 3dvh; }
+            .hp-zone { font-size: 4.5dvh; }
             .token-stage-2 { font-size: 6dvh; }
             .status-badge { font-size: 2.8dvh; }
 
@@ -308,17 +308,23 @@
                 gap: 14px;
             }
 
+            /* Forces Time Card to crop top half and display only the bottom half */
             #timedeck-active-card-container {
                 flex: 1;
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                max-height: 78dvh;
+                max-height: 75dvh;
+                height: 75dvh;
+                overflow: hidden;
+                border-radius: 8px;
             }
 
             .timedeck-display-img {
-                max-height: 78dvh;
-                width: auto;
+                width: 100%;
+                height: 150dvh; /* Scales image height so top 50% overflows and gets hidden */
+                object-fit: cover;
+                object-position: bottom; /* Locks focus to the bottom half of the card */
             }
 
             .modal-controls {
@@ -661,7 +667,12 @@
             const cardData = database[currentCardKey];
 
             if (pendingAction === 'hp') {
-                cardData.hpZone = { x: parseFloat((clickX - 5).toFixed(1)), y: parseFloat((clickY - 7).toFixed(1)), w: 10, h: 14 };
+                cardData.hpZone = { 
+				x: parseFloat((clickX - 6).toFixed(1)),
+				y: parseFloat((clickY - 8).toFixed(1)),
+				w: 12,
+				h: 17
+				};
                 setPendingAction(null);
             } else if (pendingAction === 'token') {
                 cardData.tokenZones.push({
