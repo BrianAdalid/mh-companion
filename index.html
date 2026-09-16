@@ -290,7 +290,7 @@
             }
 
             .zone { font-size: 3.5dvh; }
-            .hp-zone { font-size: 7dvh; }
+            .hp-zone { font-size: 11dvh; }
             .token-stage-2 { font-size: 6dvh; }
             .status-badge { font-size: 2.8dvh; }
 
@@ -348,12 +348,13 @@
         <button class="btn-edit" onclick="toggleEditMode()">Edit Mode</button>
     </div>
 
-    <div id="edit-panel" class="panel">
+<div id="edit-panel" class="panel">
         <input type="number" id="edit-max-hp" placeholder="Max HP" oninput="saveMaxHp()">
-        <button id="btn-tool-hp" onclick="setPendingAction('hp')">1. Place HP Box</button>
-        <button id="btn-tool-token" onclick="setPendingAction('token')">2. Add 'X' Break Box</button>
-        <button id="btn-tool-status" onclick="setPendingAction('status')">3. Add Status Counter</button>
-        <button class="btn-danger" onclick="clearZones()">Clear Boxes</button>
+        <button id="btn-tool-hp" onclick="setPendingAction('hp')">HP Box</button>
+        <button id="btn-tool-token" onclick="setPendingAction('token')">Break Box</button>
+        <button id="btn-tool-status" onclick="setPendingAction('status')">Status Counter</button>
+        <button id="btn-tool-delete" style="background-color: #c9302c;" onclick="setPendingAction('delete')">Delete Single Box</button>
+        <button class="btn-danger" onclick="clearZones()">Clear All</button>
     </div>
 
     <div id="card-container" onclick="handleImageClick(event)">
