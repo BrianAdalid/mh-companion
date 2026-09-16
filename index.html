@@ -530,21 +530,35 @@
             renderZones();
         }
 
-        function renderZones() {
+		function renderZones() {
             const container = document.getElementById('zones');
             container.innerHTML = '';
             if (!currentCardKey || !database[currentCardKey]) return;
 
             const cardData = database[currentCardKey];
 
+            // Render HP Zone
             if (cardData.hpZone) {
                 const hpDiv = createZoneElement(cardData.hpZone, 'hp');
                 hpDiv.id = 'current-hp-display';
                 hpDiv.innerText = currentHp;
-                if (!isEditMode) hpDiv.onclick = (e) => { e.stopPropagation(); updateHealth(); };
+
+                if (!isEditMode) {
+                    hpDiv.onclick = (e) => { e.stopPropagation(); updateHealth(); };
+                } else {
+                    hpDiv.onclick = (e) => {
+                        e.stopPropagation();
+                        if (pendingAction === 'delete') deleteZone('hp');
+                    };
+                    hpDiv.oncontextmenu = (e) => {
+                        e.preventDefault(); e.stopPropagation();
+                        deleteZone('hp');
+                    };
+                }
                 container.appendChild(hpDiv);
             }
 
+            // Render Token / Break Zones
             cardData.tokenZones.forEach(token => {
                 const tDiv = createZoneElement(token, 'token');
                 const state = tokenStates[token.id] || 0;
@@ -553,15 +567,24 @@
                 if (!isEditMode) {
                     tDiv.onclick = (e) => { e.stopPropagation(); cycleTokenState(tDiv, token.id); };
                     tDiv.oncontextmenu = (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
+                        e.preventDefault(); e.stopPropagation();
                         tokenStates[token.id] = (tokenStates[token.id] === 10) ? 0 : 10;
                         applyTokenStyle(tDiv, tokenStates[token.id]);
+                    };
+                } else {
+                    tDiv.onclick = (e) => {
+                        e.stopPropagation();
+                        if (pendingAction === 'delete') deleteZone('token', token.id);
+                    };
+                    tDiv.oncontextmenu = (e) => {
+                        e.preventDefault(); e.stopPropagation();
+                        deleteZone('token', token.id);
                     };
                 }
                 container.appendChild(tDiv);
             });
 
+            // Render Status Zones
             (cardData.statusZones || []).forEach(statusToken => {
                 const sDiv = createZoneElement(statusToken, 'status');
                 const state = tokenStates[statusToken.id] || 0;
@@ -570,10 +593,18 @@
                 if (!isEditMode) {
                     sDiv.onclick = (e) => { e.stopPropagation(); cycleStatusState(sDiv, statusToken.id); };
                     sDiv.oncontextmenu = (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
+                        e.preventDefault(); e.stopPropagation();
                         tokenStates[statusToken.id] = 0;
                         applyStatusStyle(sDiv, 0, statusToken.color || 'dragon');
+                    };
+                } else {
+                    sDiv.onclick = (e) => {
+                        e.stopPropagation();
+                        if (pendingAction === 'delete') deleteZone('status', statusToken.id);
+                    };
+                    sDiv.oncontextmenu = (e) => {
+                        e.preventDefault(); e.stopPropagation();
+                        deleteZone('status', statusToken.id);
                     };
                 }
                 container.appendChild(sDiv);
@@ -644,11 +675,13 @@
             renderZones();
         }
 
-        function setPendingAction(action) {
+		function setPendingAction(action) {
             pendingAction = action;
             document.getElementById('btn-tool-hp').classList.remove('btn-active-tool');
             document.getElementById('btn-tool-token').classList.remove('btn-active-tool');
             document.getElementById('btn-tool-status').classList.remove('btn-active-tool');
+            const delBtn = document.getElementById('btn-tool-delete');
+            if (delBtn) delBtn.classList.remove('btn-active-tool');
 
             if (action === 'hp') {
                 document.getElementById('btn-tool-hp').classList.add('btn-active-tool');
@@ -656,6 +689,8 @@
                 document.getElementById('btn-tool-token').classList.add('btn-active-tool');
             } else if (action === 'status') {
                 document.getElementById('btn-tool-status').classList.add('btn-active-tool');
+            } else if (action === 'delete') {
+                if (delBtn) delBtn.classList.add('btn-active-tool');
             }
         }
 
@@ -721,7 +756,21 @@
                 renderZones();
             }
         }
+		function deleteZone(type, id) {
+            if (!currentCardKey || !database[currentCardKey]) return;
+            const cardData = database[currentCardKey];
 
+            if (type === 'hp') {
+                cardData.hpZone = null;
+            } else if (type === 'token') {
+                cardData.tokenZones = cardData.tokenZones.filter(t => t.id !== id);
+            } else if (type === 'status') {
+                cardData.statusZones = cardData.statusZones.filter(s => s.id !== id);
+            }
+
+            saveDatabase();
+            renderZones();
+        }
         function saveDatabase() {
             localStorage.setItem('mh_hosted_database', JSON.stringify(database));
         }
