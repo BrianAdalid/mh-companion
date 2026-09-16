@@ -216,15 +216,67 @@
             border: 1px solid #444;
         }
 
+/* Mobile Landscape Mode Optimization (Side Panel Layout) */
         @media (orientation: landscape) and (max-height: 600px) {
-            body { padding: 0; margin: 0; overflow: hidden; height: 100vh; justify-content: center; }
-            .panel { display: none !important; }
-            #card-container { height: 100vh; width: auto; max-width: none; display: inline-block; }
-            #card-image { height: 100vh; width: auto; max-width: none; }
-            .zone { font-size: 4vh; }
-            .hp-zone { font-size: 3.5vh; }
-            .token-stage-2 { font-size: 7vh; }
-            .status-badge { font-size: 3vh; }
+            body {
+                padding: 5px 10px;
+                margin: 0;
+                overflow: hidden;
+                height: 100vh;
+                flex-direction: row; /* Arranges sidebar and card side-by-side */
+                justify-content: center;
+                align-items: center;
+                gap: 12px;
+                box-sizing: border-box;
+            }
+
+            /* Displays controls as a left-hand sidebar */
+            .panel {
+                display: flex !important;
+                flex-direction: column;
+                width: 170px;
+                max-width: 170px;
+                max-height: 96vh;
+                margin-bottom: 0;
+                gap: 8px;
+                padding: 8px;
+                justify-content: center;
+                overflow-y: auto;
+            }
+
+            .panel select, .panel button, .panel input {
+                width: 100%;
+                min-width: 0;
+                font-size: 12px;
+                padding: 6px;
+                box-sizing: border-box;
+            }
+
+            #edit-panel {
+                width: 150px;
+                max-width: 150px;
+            }
+
+            /* Fits card height to 96% of the screen */
+            #card-container {
+                height: 96vh;
+                width: auto;
+                max-width: none;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            #card-image {
+                height: 96vh;
+                width: auto;
+                max-width: none;
+            }
+
+            .zone { font-size: 3.5vh; }
+            .hp-zone { font-size: 3vh; }
+            .token-stage-2 { font-size: 6vh; }
+            .status-badge { font-size: 2.8vh; }
         }
     </style>
 </head>
@@ -569,7 +621,7 @@
             const cardData = database[currentCardKey];
 
             if (pendingAction === 'hp') {
-                cardData.hpZone = { x: parseFloat((clickX - 5).toFixed(1)), y: parseFloat((clickY - 7).toFixed(1)), w: 10, h: 14 };
+                cardData.hpZone = { x: parseFloat((clickX - 5).toFixed(1)), y: parseFloat((clickY - 7).toFixed(1)), w: 12, h: 17 };
                 setPendingAction(null);
             } else if (pendingAction === 'token') {
                 cardData.tokenZones.push({
